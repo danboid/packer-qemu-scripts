@@ -1,0 +1,64 @@
+{
+  "builders":
+  [
+    {
+      "type": "qemu",
+      "iso_url": "/home/dan/Downloads/CentOS-6.9-x86_64-minimal.iso",
+      "iso_checksum": "af4a1640c0c6f348c6c41f1ea9e192a2",
+      "iso_checksum_type": "md5",
+      "output_directory": "c6test",
+      "shutdown_command": "shutdown -P now",
+      "disk_size": 5000,
+      "format": "qcow2",
+      "headless": false,
+      "accelerator": "kvm",
+      "http_directory": "/home/dan/PackerTest/ks/",
+      "http_port_min": 10082,
+      "http_port_max": 10089,
+      "ssh_host_port_min": 2222,
+      "ssh_host_port_max": 2229,
+      "ssh_username": "root",
+      "ssh_password": "corn",
+      "ssh_wait_timeout": "10000s",
+      "vm_name": "c6test",
+      "net_device": "virtio-net",
+      "disk_interface": "virtio",
+      "boot_wait": "5s",
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos6-ks.cfg<enter><wait>"
+      ]
+    }
+  ],
+  "provisioners": [{
+	"type": "shell",
+    "inline": [
+      "echo 'Update base packages'",
+      "yum -y update",
+      "echo 'Remove cached udev network interfaces'",
+      "rm /etc/udev/rules.d/70-persistent-net.rules",
+      "echo 'Remove incorrect MAC address from the eth0 network script'",
+      "sed -i '/^HWADDR/d' /etc/sysconfig/network-scripts/ifcfg-eth0",
+      "echo 'Add hostname to hosts file'",
+      "sed -i 's/$/\\ c6test/' /etc/hosts",
+      "echo 'Configure SSH server for using keys only'",
+      "sed -i -e 's/#Pubkey/Pubkey/' -e 's/PasswordAuthentication\\ yes/PasswordAuthentication\\ no/g' -e 's/#PermitRootLogin\\ yes/PermitRootLogin\\ no/' /etc/ssh/sshd_config",
+      "echo 'Add non-root user ans and add user to the wheel group'",
+      "useradd -g users -G wheel -d /home/ans -s /bin/bash -p '$1$xm.sIXpk$QRa2MRwgAc4fnd4.WoVt40' ans",
+      "echo 'Make .ssh directory for new user'",
+      "mkdir /home/ans/.ssh && chown ans:users /home/ans/.ssh",
+      "echo 'Install EPEL repo and packages'",
+      "yum -y install epel-release nss-mdns"
+    ]},
+    {
+    "type": "file",
+    "source": "/home/dan/.ssh/id_rsa.pub",
+    "destination": "/home/ans/.ssh/authorized_keys"
+    },
+    {
+	"type": "shell",
+	"inline": [
+	  "echo 'Set ownership of authorized SSH keys file'",
+	  "chown ans:users /home/ans/.ssh/authorized_keys"
+	]}
+  ]
+}
