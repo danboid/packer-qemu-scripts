@@ -16,9 +16,9 @@ $ echo newpassword | openssl passwd -1 -stdin
 After you have modified the paths, hostname etc in the json file as required and you have run **packer build packer-centos6-qemu.json** successfully, you can import the image for use with libvirt/virsh/virt-manager etc:
 
 ```
-$ virt-install -n c6test -r 2048 --disk /path/to/image,device=disk,bus=virtio --import
+$ virt-install -n VMname -r 2048 --disk /path/to/image,device=disk,bus=virtio --noautoconsole --os-variant rhel6 --import
 ```
 
-Substituting **c6test** for the name to give the VM under libvirt, **2048** for the number of MBs of RAM you wish the VM to have and **/path/to/image** with the VM image. 
+Substituting **VMname** for the name to give the VM under libvirt, **2048** for the number of MBs of RAM you wish the VM to have and **/path/to/image** with the full path to the VM image. 
 
-I will likely use these scripts as templates to create a master (shell or python) script that would be capable of substituting the vm/hostname (c6test) in both the json and the ks file, running packer and optionally importing the image into libvirt in one short command where the user would only need to specify the VM/hostname to use for creating the new VM and importing it.
+**mkc6vm.sh** provides a very simple example of how to use a shell script to fully automate the creation of new CentOS 6 qemu VMs with packer. See the scripts comments for usage instructions.
